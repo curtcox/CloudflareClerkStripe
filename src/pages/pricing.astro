@@ -1,0 +1,88 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { PLAN_CATALOG } from '../lib/plans';
+---
+
+<Layout title="Pricing">
+  <h1>Choose a Plan</h1>
+  <p>Two yearly plans are available via Stripe Checkout.</p>
+
+  <div class="plans">
+    {Object.values(PLAN_CATALOG).map((plan) => (
+      <article class="plan" data-plan={plan.key}>
+        <h2>{plan.name}</h2>
+        <p>Billed yearly via Stripe subscription.</p>
+        <button type="button" class="checkout" data-plan={plan.key}>
+          Checkout
+        </button>
+      </article>
+    ))}
+  </div>
+
+  <p id="checkout-message" aria-live="polite"></p>
+
+  <script>
+    const buttons = document.querySelectorAll('.checkout');
+    const message = document.querySelector('#checkout-message');
+
+    async function startCheckout(plan) {
+      if (message) message.textContent = 'Creating checkout session...';
+
+      const response = await fetch('/api/billing/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ plan })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.url) {
+        throw new Error(result.error || 'Checkout session creation failed.');
+      }
+
+      window.location.assign(result.url);
+    }
+
+    buttons.forEach((button) => {
+      button.addEventListener('click', async () => {
+        const plan = button.getAttribute('data-plan');
+
+        try {
+          await startCheckout(plan);
+        } catch (error) {
+          if (message) {
+            message.textContent = error instanceof Error ? error.message : 'Checkout failed.';
+          }
+        }
+      });
+    });
+  </script>
+
+  <style>
+    .plans {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    .plan {
+      border: 1px solid #d0d7de;
+      border-radius: 10px;
+      background: #fff;
+      padding: 16px;
+    }
+
+    .checkout {
+      border: none;
+      border-radius: 8px;
+      background: #0f766e;
+      color: #fff;
+      padding: 10px 16px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+  </style>
+</Layout>

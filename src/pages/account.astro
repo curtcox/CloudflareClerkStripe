@@ -1,0 +1,28 @@
+---
+import { createClerkClient } from '@clerk/backend';
+import Layout from '../layouts/Layout.astro';
+import { withSubscriptionDefaults } from '../lib/subscription';
+
+const { userId } = Astro.locals.auth();
+if (!userId) {
+  return Astro.redirect('/sign-in');
+}
+
+const clerkClient = createClerkClient({ secretKey: import.meta.env.CLERK_SECRET_KEY });
+const user = await clerkClient.users.getUser(userId);
+const subscription = withSubscriptionDefaults(user.privateMetadata?.subscription);
+---
+
+<Layout title="Your Account">
+  <h1>Account</h1>
+  <p><strong>Email:</strong> {user.primaryEmailAddress?.emailAddress ?? 'N/A'}</p>
+  <h2>Subscription</h2>
+  <ul>
+    <li><strong>Plan key:</strong> {subscription.planKey ?? 'none'}</li>
+    <li><strong>Status:</strong> {subscription.planStatus}</li>
+    <li><strong>Stripe customer:</strong> {subscription.stripeCustomerId ?? 'none'}</li>
+    <li><strong>Stripe subscription:</strong> {subscription.stripeSubscriptionId ?? 'none'}</li>
+    <li><strong>Current period end:</strong> {subscription.currentPeriodEnd ?? 'none'}</li>
+  </ul>
+  <p><a href="/pricing">Manage billing</a></p>
+</Layout>

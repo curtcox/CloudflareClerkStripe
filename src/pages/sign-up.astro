@@ -1,0 +1,9 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { SignUp } from '@clerk/astro/components';
+---
+
+<Layout title="Sign Up">
+  <h1>Create your account</h1>
+  <SignUp routing="path" path="/sign-up" signInUrl="/sign-in" />
+</Layout>

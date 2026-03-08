@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run unit tests (JSON output)
+        run: npm run test:ci
+
+      - name: Build app
+        env:
+          BUILD_DATE: ${{ github.event.head_commit.timestamp || github.run_id }}
+          GIT_SHA: ${{ github.sha }}
+          PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.CLERK_PUBLISHABLE_KEY || 'pk_test_placeholder' }}
+          CLERK_PUBLISHABLE_KEY: ${{ secrets.CLERK_PUBLISHABLE_KEY || 'pk_test_placeholder' }}
+          CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY || 'sk_test_placeholder' }}
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY || 'sk_test_placeholder' }}
+          STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET || 'whsec_placeholder' }}
+          STRIPE_PRICE_ID_YEARLY_1: ${{ secrets.STRIPE_PRICE_ID_YEARLY_1 || 'price_placeholder_1' }}
+          STRIPE_PRICE_ID_YEARLY_10: ${{ secrets.STRIPE_PRICE_ID_YEARLY_10 || 'price_placeholder_10' }}
+        run: |
+          BUILD_DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          export BUILD_DATE
+          npm run build
+
+      - name: Upload unit test artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-results-${{ github.sha }}
+          path: artifacts/test-results.json
+          if-no-files-found: error

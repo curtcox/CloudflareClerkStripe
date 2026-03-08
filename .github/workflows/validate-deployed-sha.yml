@@ -1,0 +1,44 @@
+name: Validate Deployed SHA
+
+on:
+  workflow_run:
+    workflows:
+      - Deploy Cloudflare
+    types:
+      - completed
+  workflow_dispatch:
+
+jobs:
+  validate:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Assemble URLs
+        env:
+          CLOUDFLARE_PAGES_URL: ${{ secrets.CLOUDFLARE_PAGES_URL }}
+          CUSTOM_DOMAIN_URL: ${{ secrets.CUSTOM_DOMAIN_URL }}
+        run: |
+          set -euo pipefail
+          URLS="${CLOUDFLARE_PAGES_URL},${CUSTOM_DOMAIN_URL}"
+          URLS="$(echo "$URLS" | sed 's/^,*//; s/,*$//; s/,,*/,/g')"
+          if [ -z "$URLS" ]; then
+            echo "::error::No deployment URLs configured. Set CLOUDFLARE_PAGES_URL and CUSTOM_DOMAIN_URL."
+            exit 1
+          fi
+          echo "URLS=$URLS" >> "$GITHUB_ENV"
+
+      - name: Validate embedded SHA
+        env:
+          EXPECTED_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+          URLS: ${{ env.URLS }}
+          SHA_CHECK_RETRIES: 8
+          SHA_CHECK_DELAY_MS: 15000
+        run: node scripts/validate-deployed-sha.mjs

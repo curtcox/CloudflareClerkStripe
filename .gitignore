@@ -1,0 +1,10 @@
+node_modules
+.dist
+dist
+.astro
+.env
+.env.*
+artifacts
+report
+coverage
+.DS_Store

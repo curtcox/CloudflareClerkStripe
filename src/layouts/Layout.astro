@@ -1,0 +1,108 @@
+---
+import { Show, SignInButton, SignUpButton, UserButton } from '@clerk/astro/components';
+import { getBuildInfo } from '../lib/build-info';
+
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+const info = getBuildInfo();
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>{title}</title>
+    <style>
+      :root {
+        --bg: #f8f7f2;
+        --text: #1f2328;
+        --card: #ffffff;
+        --accent: #0f766e;
+      }
+
+      body {
+        margin: 0;
+        font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+        background: radial-gradient(circle at top right, #d4f8ee, var(--bg) 55%);
+        color: var(--text);
+      }
+
+      main {
+        max-width: 920px;
+        margin: 0 auto;
+        padding: 24px 16px 48px;
+      }
+
+      nav {
+        background: var(--card);
+        border-bottom: 1px solid #d0d7de;
+      }
+
+      .nav-wrap {
+        max-width: 920px;
+        margin: 0 auto;
+        padding: 14px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .links {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+
+      a {
+        color: var(--accent);
+        text-decoration: none;
+        font-weight: 600;
+      }
+
+      a:hover {
+        text-decoration: underline;
+      }
+
+      .meta {
+        margin-top: 32px;
+        padding: 12px;
+        border: 1px dashed #9ca3af;
+        border-radius: 10px;
+        font-size: 12px;
+        background: #fff;
+      }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <div class="nav-wrap">
+        <div class="links">
+          <a href="/">Home</a>
+          <a href="/pricing">Pricing</a>
+          <a href="/account">Account</a>
+        </div>
+        <div class="links">
+          <Show when="signed-out">
+            <SignInButton mode="modal" />
+            <SignUpButton mode="modal" />
+          </Show>
+          <Show when="signed-in">
+            <UserButton />
+          </Show>
+        </div>
+      </div>
+    </nav>
+    <main>
+      <slot />
+      <div class="meta">
+        Build date (UTC): <strong>{info.buildDate}</strong><br />
+        Git SHA: <strong>{info.gitSha}</strong>
+      </div>
+    </main>
+  </body>
+</html>

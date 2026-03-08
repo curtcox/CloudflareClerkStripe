@@ -1,0 +1,54 @@
+name: Deploy Build Report
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build-and-deploy-report:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Run unit tests for report
+        run: npm run test:ci
+
+      - name: Generate build report
+        env:
+          BUILD_DATE: ${{ github.event.head_commit.timestamp || github.run_id }}
+          GIT_SHA: ${{ github.sha }}
+          TEST_RESULTS_FILE: artifacts/test-results.json
+          REPORT_DIR: report
+        run: |
+          BUILD_DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          export BUILD_DATE
+          npm run report:build
+
+      - name: Upload report artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: report
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

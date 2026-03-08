@@ -18,26 +18,37 @@ Minimal Astro + TypeScript starter with:
 - `/account` protected account page with subscription metadata
 - `/build-info.json` build date + git SHA JSON payload
 
-## Environment Variables
+## Targeted Setup Docs
 
-Copy `.env.example` to `.env` for local development.
+Use these guides for detailed setup and secret management:
 
-Required keys:
+- GitHub Actions and repository setup: [`docs/github.md`](./docs/github.md)
+- Cloudflare Pages setup and deploy secrets: [`docs/cloudflare.md`](./docs/cloudflare.md)
+- Clerk auth setup and keys: [`docs/clerk.md`](./docs/clerk.md)
+- Stripe products/prices/webhooks and keys: [`docs/stripe.md`](./docs/stripe.md)
 
-- `CLERK_PUBLISHABLE_KEY`
-- `PUBLIC_CLERK_PUBLISHABLE_KEY` (same value as `CLERK_PUBLISHABLE_KEY`)
-- `CLERK_SECRET_KEY`
-- `STRIPE_SECRET_KEY`
-- `STRIPE_WEBHOOK_SECRET`
-- `STRIPE_PRICE_ID_YEARLY_1`
-- `STRIPE_PRICE_ID_YEARLY_10`
+Each guide includes:
+
+- How to find or generate each required secret
+- What each secret is used for
+- Where each secret is consumed in workflows/runtime
 
 ## Local Development
 
+1. Copy `.env.example` to `.env` and fill values.
+2. Install dependencies:
+
 ```bash
 npm install
+```
+
+3. Run dev server:
+
+```bash
 npm run dev
 ```
+
+## Test and Build
 
 Run unit tests:
 
@@ -45,69 +56,11 @@ Run unit tests:
 npm run test:unit
 ```
 
-Build:
+Build production output:
 
 ```bash
 npm run build
 ```
-
-## GitHub Secrets
-
-Add these repository secrets:
-
-### Cloudflare
-
-- `CLOUDFLARE_API_TOKEN`
-- `CLOUDFLARE_ACCOUNT_ID`
-- `CLOUDFLARE_PROJECT_NAME`
-- `CLOUDFLARE_PAGES_URL`
-- `CUSTOM_DOMAIN_URL`
-
-### Clerk
-
-- `CLERK_PUBLISHABLE_KEY`
-- `PUBLIC_CLERK_PUBLISHABLE_KEY` (use same value as `CLERK_PUBLISHABLE_KEY`)
-- `CLERK_SECRET_KEY`
-
-### Stripe
-
-- `STRIPE_SECRET_KEY`
-- `STRIPE_WEBHOOK_SECRET`
-- `STRIPE_PRICE_ID_YEARLY_1`
-- `STRIPE_PRICE_ID_YEARLY_10`
-
-## Workflows
-
-- `.github/workflows/ci.yml`
-  - Runs tests and build
-  - Uploads machine-readable `artifacts/test-results.json`
-
-- `.github/workflows/deploy-build-report.yml`
-  - Runs tests
-  - Generates and deploys HTML build report to GitHub Pages
-  - Includes build date and full commit SHA
-
-- `.github/workflows/deploy-cloudflare.yml`
-  - Builds Astro app with embedded build metadata
-  - Syncs Clerk/Stripe secrets to Cloudflare Pages runtime secrets
-  - Deploys to Cloudflare Pages
-
-- `.github/workflows/validate-deployed-sha.yml`
-  - Validates `/build-info.json` from both `CLOUDFLARE_PAGES_URL` and `CUSTOM_DOMAIN_URL`
-  - Fails if deployed SHA does not match expected commit SHA
-
-## Stripe Webhook Setup
-
-Point Stripe webhook endpoint to:
-
-- `https://<your-domain>/api/webhooks/stripe`
-
-Enable events:
-
-- `checkout.session.completed`
-- `customer.subscription.created`
-- `customer.subscription.updated`
-- `customer.subscription.deleted`
 
 ## Notes
 
